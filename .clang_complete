@@ -1,0 +1,14 @@
+-std=c++17
+-I./subprojects/ny/include
+-I./subprojects/vpp/include
+-I./subprojects/nytl
+-I./subprojects/dlg/include
+-I./build/subprojects/ny/include
+-I./build/subprojects/vpp/include
+-I./assets
+-I./build/assets
+-Wextra
+-Wall
+-Wpedantic
+-Wno-missing-braces
+-Wno-unused-const-variable
