@@ -2,9 +2,9 @@ Vulkan particles
 ================
 
 Just a small example showing how to effectively use some of my projects.
-- [ny](https://github.com/nyorain/ny) as window abstraction,
-- [vpp](https://github.com/nyorain/vpp) as vulkan utility
-- [bintoheader](https://github.com/nyorain/bintoheader) to spirv c headers
+- [ny](https://github.com/nyorain/ny) as window abstraction
+- [vpp](https://github.com/nyorain/vpp) for a C++ vulkan utility
+- [bintoheader](https://github.com/nyorain/bintoheader) to genereate spirv c headers
 - [dlg](https://github.com/nyorain/dlg) as logging library
 
 Consists of only 3 parts (6 files, header + source for each).
