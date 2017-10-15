@@ -63,7 +63,7 @@ void MainWindowListener::key(const ny::KeyEvent& keyEvent)
 {
 	auto keycode = keyEvent.keycode;
 	auto mods = ac().keyboardContext()->modifiers();
-	if(keyEvent.pressed && mods & ny::KeyboardModifier::alt) {
+	if(keyEvent.pressed && (mods & ny::KeyboardModifier::shift)) {
 		if(keycode == ny::Keycode::f) {
 			dlg_info("f pressed. Toggling fullscreen");
 			if(toplevelState_ != ny::ToplevelState::fullscreen) {
