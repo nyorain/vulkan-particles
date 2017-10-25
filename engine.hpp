@@ -6,7 +6,6 @@
 
 #include <ny/fwd.hpp>
 #include <vpp/fwd.hpp>
-#include <vpp/vulkan/enums.hpp>
 #include <nytl/vec.hpp>
 
 class Renderer;
