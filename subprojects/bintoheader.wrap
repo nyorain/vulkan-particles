@@ -1,4 +1,0 @@
-[wrap-git]
-directory=bintoheader
-url=https://github.com/nyorain/bintoheader.git
-revision=meson

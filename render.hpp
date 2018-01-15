@@ -60,7 +60,8 @@ protected:
 
 	bool pushConstants_ {false};
 	// unsigned int particleCount_ {350000}; // android
-	unsigned int particleCount_ {3000000};
+	// unsigned int particleCount_ {3000000}; // main pc
+	unsigned int particleCount_ {750000}; 
 	vpp::Buffer particleBuffer_;
 	vpp::Buffer compUbo_;
 	vpp::DescriptorPool descriptorPool_;
