@@ -136,7 +136,7 @@ Renderer::Renderer(const vpp::Device& dev, vk::SurfaceKHR surface,
 			particles[i].vel = {0.f, 0.f};
 		}
 
-		vpp::fill430(particleBuffer_, vpp::raw(particles));
+		vpp::writeStaging430(particleBuffer_, vpp::raw(particles));
 	}
 
 	// write descriptor
@@ -203,7 +203,7 @@ void Renderer::createMultisampleTarget(const vk::Extent2D& size)
 
 	// create the viewable image
 	// will set the created image in the view info for us
-	multisampleTarget_ = {device(), {img, view}};
+	multisampleTarget_ = {device(), img, view};
 }
 
 void Renderer::record(const RenderBuffer& buf)
@@ -218,16 +218,9 @@ void Renderer::record(const RenderBuffer& buf)
 	// compute
 	if(pushConstants_) {
 		auto data = uboData_.data();
-
 		vk::cmdPushConstants(cmdBuf, compPipelineLayout_, 
 			vk::ShaderStageBits::compute, 0,
 			neededUniformSize, data);
-		
-		/*
-		 vkCmdPushConstants((VkCommandBuffer) cmdBuf,
-			 (VkPipelineLayout) compPipelineLayout_.vkHandle(), 0x20, 
-			 0, neededUniformSize, data);
-		*/
 	}
 
 	// compute
