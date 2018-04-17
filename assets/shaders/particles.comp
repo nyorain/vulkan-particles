@@ -17,18 +17,10 @@ layout(std430, set = 0, binding = 0) buffer Particles {
 };
 
 layout(set = 0, binding = 1) uniform UBO {
+	vec4 attract[5]; // attraction positions
 	float deltaT; // time delta in seconds
-	float attract; // attraction factor
-	vec2 mousePos; // attraction pos
+	uint count; // number of attraction positions (<= 5)
 } ubo;
-
-/*
-layout(push_constant) uniform UBO {
-	float deltaT; // time delta in seconds
-	float attract; // attraction factor
-	vec2 mousePos; // attraction pos
-} ubo;
-*/
 
 vec2 attraction(vec2 pos, vec2 attractPos)
 {
@@ -63,10 +55,15 @@ void main() {
 	vec2 pos = particles[index].pos;
 	vec2 vel = particles[index].vel;
 
-	// Calculate new velocity depending on attraction point
 	// apply fraction
-	vel += attractionFactor * ubo.attract * ubo.deltaT * attraction(pos, ubo.mousePos);
 	vel *= 1 - (0.7 * ubo.deltaT);
+
+	// Calculate new velocity depending on attraction point
+	float fac = 1.f / sqrt(ubo.count);
+	for(uint i = 0; i < ubo.count; ++i) {
+		vec2 a = mod(i, 2) == 0 ? ubo.attract[i / 2].xy : ubo.attract[i / 2].zw;
+		vel += fac * attractionFactor * ubo.deltaT * attraction(pos, a);
+	}
 
 	// Move by velocity
 	pos += vel * ubo.deltaT;

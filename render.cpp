@@ -20,11 +20,11 @@
 #include <shaders/particles.vert.h>
 #include <shaders/particles.comp.h>
 
-vpp::Pipeline createGraphicsPipeline(const vpp::Device&, vk::RenderPass, 
+vpp::Pipeline createGraphicsPipeline(const vpp::Device&, vk::RenderPass,
 	vk::PipelineLayout, vk::SampleCountBits);
 vpp::Pipeline createComputePipeline(const vpp::Device& device,
 	vk::PipelineLayout layout);
-vpp::RenderPass createRenderPass(const vpp::Device&, vk::Format, 
+vpp::RenderPass createRenderPass(const vpp::Device&, vk::Format,
 	vk::SampleCountBits);
 
 struct Particle {
@@ -32,10 +32,16 @@ struct Particle {
 	nytl::Vec2f vel;
 };
 
-constexpr auto neededUniformSize = 4 * sizeof(float);
+constexpr auto neededUniformSize = (2 + 4 * 5) * 4;
 constexpr auto memoryType = 1; // -1 to just choose a suited one
 
-Renderer::Renderer(const vpp::Device& dev, vk::SurfaceKHR surface, 
+template<typename T>
+void write(std::byte*& ptr, T&& data) {
+	std::memcpy(ptr, &data, sizeof(data));
+	ptr += sizeof(data);
+}
+
+Renderer::Renderer(const vpp::Device& dev, vk::SurfaceKHR surface,
 	vk::SampleCountBits samples, const vpp::Queue& present)
 {
 	// FIXME: size
@@ -59,18 +65,16 @@ Renderer::Renderer(const vpp::Device& dev, vk::SurfaceKHR surface,
 
 	descriptorPool_ = {dev, descriptorPoolInfo};
 
-	uboData_.resize(neededUniformSize / sizeof(float));
-
 	gfxPipelineLayout_ = {dev, {}, {}};
-	gfxPipeline_ = createGraphicsPipeline(dev, renderPass_, 
+	gfxPipeline_ = createGraphicsPipeline(dev, renderPass_,
 		gfxPipelineLayout_, sampleCount_);
 
 	auto compBindings = {
 		vpp::descriptorBinding(
-			vk::DescriptorType::storageBuffer, 
+			vk::DescriptorType::storageBuffer,
 			vk::ShaderStageBits::compute, 0),
 		vpp::descriptorBinding(
-			vk::DescriptorType::uniformBuffer, 
+			vk::DescriptorType::uniformBuffer,
 			vk::ShaderStageBits::compute, 1)
 	};
 
@@ -153,20 +157,27 @@ Renderer::Renderer(const vpp::Device& dev, vk::SurfaceKHR surface,
 	vpp::DefaultRenderer::init(renderPass_, scInfo_, present, {}, mode);
 }
 
-void Renderer::update(double delta) 
+void Renderer::update(double delta)
 {
 	auto width = scInfo_.imageExtent.width;
 	auto height = scInfo_.imageExtent.height;
 
-	uboData_[0] = delta;
-	uboData_[1] = attractFac_;
-	uboData_[2] = 2 * (attractPos_[0] / width) - 1;
-	uboData_[3] = 2 * (attractPos_[1] / height) - 1;
-
-	if(!pushConstants_) {
-		auto view = compUbo_.memoryMap();
-		std::memcpy(view.ptr(), uboData_.data(), neededUniformSize);
+	if(points_.size() > 10) {
+		points_.resize(10);
 	}
+
+	auto view = compUbo_.memoryMap();
+	auto ptr = view.ptr();
+
+	for(auto p : points_) {
+		dlg_info("p: {}", p);
+		write<float>(ptr, 2 * (p[0] / float(width)) - 1);
+		write<float>(ptr, 2 * (p[1] / float(height)) - 1);
+	}
+
+	ptr = view.ptr() + sizeof(nytl::Vec2f) * 10;
+	write<float>(ptr, delta);
+	write<std::uint32_t>(ptr, points_.size());
 }
 
 void Renderer::createMultisampleTarget(const vk::Extent2D& size)
@@ -216,14 +227,6 @@ void Renderer::record(const RenderBuffer& buf)
 	vk::beginCommandBuffer(cmdBuf, {});
 
 	// compute
-	if(pushConstants_) {
-		auto data = uboData_.data();
-		vk::cmdPushConstants(cmdBuf, compPipelineLayout_, 
-			vk::ShaderStageBits::compute, 0,
-			neededUniformSize, data);
-	}
-
-	// compute
 	vk::cmdBindPipeline(cmdBuf, vk::PipelineBindPoint::compute, compPipeline_);
 	vk::cmdBindDescriptorSets(cmdBuf, vk::PipelineBindPoint::compute,
 		compPipelineLayout_, 0, {compDescriptor_}, {});
@@ -266,19 +269,19 @@ void Renderer::samples(vk::SampleCountBits samples)
 
 	renderPass_ = createRenderPass(device(), scInfo_.imageFormat, samples);
 	vpp::DefaultRenderer::renderPass_ = renderPass_;
-	gfxPipeline_ = createGraphicsPipeline(device(), renderPass_, 
+	gfxPipeline_ = createGraphicsPipeline(device(), renderPass_,
 		gfxPipelineLayout_, sampleCount_);
 
 	initBuffers(scInfo_.imageExtent, renderBuffers_);
 	invalidate();
 }
 
-void Renderer::initBuffers(const vk::Extent2D& size, 
+void Renderer::initBuffers(const vk::Extent2D& size,
 	nytl::Span<RenderBuffer> bufs)
 {
 	if(sampleCount_ != vk::SampleCountBits::e1) {
 		createMultisampleTarget(scInfo_.imageExtent);
-		vpp::DefaultRenderer::initBuffers(size, bufs, 
+		vpp::DefaultRenderer::initBuffers(size, bufs,
 			{multisampleTarget_.vkImageView()});
 	} else {
 		vpp::DefaultRenderer::initBuffers(size, bufs, {});
@@ -296,7 +299,7 @@ void Renderer::surfaceCreated(vk::SurfaceKHR surface)
 	// TODO: size
 	// TODO: we can not really assume that format and everything stays
 	// the same and should probably recreate pipeline and renderPass
-	scInfo_ = vpp::swapchainCreateInfo(present_->device(), 
+	scInfo_ = vpp::swapchainCreateInfo(present_->device(),
 		surface, scInfo_.imageExtent);
 	swapchain_ = {present_->device(), scInfo_};
 	createBuffers(scInfo_.imageExtent, scInfo_.imageFormat);

@@ -21,7 +21,9 @@
 
 void MainWindowListener::mouseButton(const ny::MouseButtonEvent& ev)
 {
+	mousePos = static_cast<nytl::Vec2f>(ev.position);
 	if(ev.button == ny::MouseButton::left) {
+		mousePressed = ev.pressed;
 		if(ev.pressed) {
 			auto mods = ac().keyboardContext()->modifiers();
 			bool alt = mods & ny::KeyboardModifier::alt;
@@ -52,11 +54,8 @@ void MainWindowListener::mouseButton(const ny::MouseButtonEvent& ev)
 				}
 
 				return;
-			} 
+			}
 		}
-
-		renderer->attractPos_ = static_cast<nytl::Vec2f>(ev.position);
-		renderer->attractFac_ = ev.pressed;
 	}
 }
 void MainWindowListener::key(const ny::KeyEvent& keyEvent)
@@ -114,7 +113,7 @@ void MainWindowListener::key(const ny::KeyEvent& keyEvent)
 }
 void MainWindowListener::mouseMove(const ny::MouseMoveEvent& ev)
 {
-	renderer->attractPos_ = static_cast<nytl::Vec2f>(ev.position);
+	mousePos = static_cast<nytl::Vec2f>(ev.position);
 }
 void MainWindowListener::mouseWheel(const ny::MouseWheelEvent& ev)
 {
@@ -169,6 +168,44 @@ void MainWindowListener::surfaceDestroyed(const ny::SurfaceDestroyedEvent&)
 	renderer->wait();
 	renderer->surfaceDestroyed();
 	*wait = true;
+}
+
+void MainWindowListener::touchBegin(const ny::TouchBeginEvent& ev) {
+	auto it = std::find_if(points.begin(), points.end(),
+		[&](auto& point) { return point.id == ev.id; });
+	if(it != points.end()) {
+		dlg_warn("Reused touch id (update) {}", ev.id);
+		it->pos = ev.pos;
+		return;
+	}
+
+	points.push_back({ev.id, ev.pos});
+}
+
+void MainWindowListener::touchUpdate(const ny::TouchUpdateEvent& ev) {
+	auto it = std::find_if(points.begin(), points.end(),
+		[&](auto& point) { return point.id == ev.id; });
+	if(it == points.end()) {
+		dlg_warn("Invalid touch id (update) {}", ev.id);
+		return;
+	}
+
+	it->pos = ev.pos;
+}
+
+void MainWindowListener::touchEnd(const ny::TouchEndEvent& ev) {
+	auto it = std::find_if(points.begin(), points.end(),
+		[&](auto& point) { return point.id == ev.id; });
+	if(it == points.end()) {
+		dlg_warn("Invalid touch id (end) {}", ev.id);
+		return;
+	}
+
+	points.erase(it);
+}
+
+void MainWindowListener::touchCancel(const ny::TouchCancelEvent&) {
+	points.clear();
 }
 
 ny::AppContext& MainWindowListener::ac() const { return *appContext; }

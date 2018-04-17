@@ -22,6 +22,15 @@ public:
 	bool* run;
 	bool* wait;
 
+	struct TouchPoint {
+		unsigned id;
+		nytl::Vec2f pos;
+	};
+
+	std::vector<TouchPoint> points;
+	nytl::Vec2f mousePos;
+	bool mousePressed;
+
 public:
 	MainWindowListener() = default;
 	~MainWindowListener() = default;
@@ -34,6 +43,10 @@ public:
 	void state(const ny::StateEvent&) override;
 	void close(const ny::CloseEvent&) override;
 	void resize(const ny::SizeEvent&) override;
+	void touchBegin(const ny::TouchBeginEvent&) override;
+	void touchUpdate(const ny::TouchUpdateEvent&) override;
+	void touchEnd(const ny::TouchEndEvent&) override;
+	void touchCancel(const ny::TouchCancelEvent&) override;
 	void surfaceCreated(const ny::SurfaceCreatedEvent&) override;
 	void surfaceDestroyed(const ny::SurfaceDestroyedEvent&) override;
 

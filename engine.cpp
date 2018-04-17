@@ -99,9 +99,9 @@ Engine::Engine()
 	impl_->windowContext = impl_->appContext->createWindowContext(ws);
 
 	const vpp::Queue* presentQueue {};
-	impl_->device = std::make_unique<vpp::Device>(impl_->instance, 
+	impl_->device = std::make_unique<vpp::Device>(impl_->instance,
 		vkSurface, presentQueue);
-	impl_->renderer = std::make_unique<Renderer>(*impl_->device, 
+	impl_->renderer = std::make_unique<Renderer>(*impl_->device,
 		vkSurface, startMsaa, *presentQueue);
 
 	impl_->windowListener.windowContext = impl_->windowContext.get();
@@ -149,6 +149,17 @@ void Engine::mainLoop()
 		auto now = Clock::now();
 		auto deltaCount = std::chrono::duration_cast<secf>(now - lastFrame).count();
 		lastFrame = now;
+
+		// update attraction positions
+		renderer().points_.clear();
+		auto& win = impl_->windowListener;
+		if(win.mousePressed) {
+			renderer().points_.push_back(win.mousePos);
+		}
+
+		for(auto& p : win.points) {
+			renderer().points_.push_back(p.pos);
+		}
 
 		renderer().update(deltaCount);
 		renderer().renderBlock();

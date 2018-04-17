@@ -22,8 +22,7 @@ class Engine;
 
 class Renderer : public vpp::DefaultRenderer {
 public:
-	nytl::Vec2f attractPos_ {};
-	float attractFac_ {0.f};
+	std::vector<nytl::Vec2f> points_ {};
 
 public:
 	Renderer() = default;
@@ -61,7 +60,7 @@ protected:
 	bool pushConstants_ {false};
 	// unsigned int particleCount_ {350000}; // android
 	// unsigned int particleCount_ {3000000}; // main pc
-	unsigned int particleCount_ {750000}; 
+	unsigned int particleCount_ {750000};
 	vpp::Buffer particleBuffer_;
 	vpp::Buffer compUbo_;
 	vpp::DescriptorPool descriptorPool_;
@@ -69,6 +68,4 @@ protected:
 	vpp::DescriptorSetLayout compDescriptorLayout_;
 	vpp::DescriptorSet gfxDescriptor_;
 	vpp::DescriptorSet compDescriptor_;
-
-	std::vector<float> uboData_;
 };

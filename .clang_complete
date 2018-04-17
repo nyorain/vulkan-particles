@@ -1,10 +1,13 @@
 -std=c++17
 -I./subprojects/ny/include
 -I./subprojects/vpp/include
+-I./subprojects/vkpp/include
 -I./subprojects/nytl
+-I./subprojects/ny/include
 -I./subprojects/dlg/include
 -I./build/subprojects/ny/include
 -I./build/subprojects/vpp/include
+-I./build/subprojects/vkpp/include
 -I./assets
 -I./build/assets
 -Wextra
@@ -12,3 +15,4 @@
 -Wpedantic
 -Wno-missing-braces
 -Wno-unused-const-variable
+-stdlib=libc++
