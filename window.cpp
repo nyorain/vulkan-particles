@@ -16,9 +16,6 @@
 #include <ny/windowSettings.hpp> // ny::WindowEdge
 #include <nytl/vecOps.hpp> // operator<<
 
-// TODO: to make this work for android, implement the surfaceCreated/surfaceDestroyed
-// methods
-
 void MainWindowListener::mouseButton(const ny::MouseButtonEvent& ev)
 {
 	mousePos = static_cast<nytl::Vec2f>(ev.position);

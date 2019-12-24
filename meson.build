@@ -19,6 +19,7 @@ add_project_arguments(
 # project-specific stuff
 source_root = meson.source_root().split('\\')
 add_project_arguments('-DDLG_BASE_PATH="' + '/'.join(source_root) + '/"', language: 'cpp')
+add_project_arguments('-DVKPP_DYNAMIC_DISPATCH=1', language: ['c', 'cpp'])
 
 dep_vpp = dependency('vpp', fallback: ['vpp', 'vpp_dep'])
 dep_ny = dependency('ny', fallback: ['ny', 'ny_dep'])

@@ -13,13 +13,18 @@
 #include <ny/windowSettings.hpp> // ny::WindowSettings
 
 #include <vpp/instance.hpp> // vpp::Instance
+#include <vpp/physicalDevice.hpp> // vpp::Instance
 #include <vpp/device.hpp> // vpp::Device
 #include <vpp/queue.hpp> // vpp::Queue
 #include <vpp/swapchain.hpp> // vpp::Swapchain
 #include <vpp/renderer.hpp> // vpp::SwapchainRenderer
-#include <vpp/debug.hpp> // vpp::DebugCallback
+// #include <vpp/debug.hpp> // vpp::DebugCallback
 
 #include <dlg/dlg.hpp> // dlg
+
+namespace vk {
+vk::DynamicDispatch dispatch;
+}
 
 #include <chrono>
 using Clock = std::chrono::high_resolution_clock;
@@ -27,7 +32,7 @@ using Clock = std::chrono::high_resolution_clock;
 struct Engine::Impl {
 	std::unique_ptr<ny::AppContext> appContext;
 	vpp::Instance instance;
-	std::unique_ptr<vpp::DebugCallback> debugCallback;
+	// std::unique_ptr<vpp::DebugCallback> debugCallback;
 	std::unique_ptr<ny::WindowContext> windowContext;
 	std::unique_ptr<vpp::Device> device;
 
@@ -81,9 +86,11 @@ Engine::Engine()
 		throw;
 	}
 
+	vk::dispatch.init(impl_->instance);
+
 	// debug callback
 	if(useValidation) {
-		impl_->debugCallback = std::make_unique<vpp::DebugCallback>(impl_->instance);
+		// impl_->debugCallback = std::make_unique<vpp::DebugCallback>(impl_->instance);
 	}
 
 	// init ny window
@@ -97,6 +104,13 @@ Engine::Engine()
 	ws.vulkan.storeSurface = &(std::uintptr_t&) (vkSurface);
 
 	impl_->windowContext = impl_->appContext->createWindowContext(ws);
+
+	uint32_t count = 0;
+	auto phdevs = vk::dispatch.vkEnumeratePhysicalDevices((VkInstance) impl_->instance.vkHandle(), &count, NULL);
+	dlg_warn("Found {} physical devices", count);
+	// for(auto phdev : phdevs) {
+	// 	dlg_debug("Found device: {}", vpp::description(phdev, "\n\t"));
+	// }
 
 	const vpp::Queue* presentQueue {};
 	impl_->device = std::make_unique<vpp::Device>(impl_->instance,
